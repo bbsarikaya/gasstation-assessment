@@ -1,6 +1,8 @@
 package me.bbsarikaya.solution;
 
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.LinkedList;
 
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
@@ -10,14 +12,28 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 public class GasStationImpl implements GasStation {
 
+	private HashMap<GasType, LinkedList<GasPump>> pumpMap;
+
+	public GasStationImpl() {
+		pumpMap = new HashMap<GasType, LinkedList<GasPump>>();
+	}
+
 	public void addGasPump(GasPump pump) {
-		// TODO Auto-generated method stub
-		
+		if (!pumpMap.containsKey(pump.getGasType())) {
+			pumpMap.put(pump.getGasType(), new LinkedList<GasPump>());
+		}
+		pumpMap.get(pump.getGasType()).add(pump);
 	}
 
 	public Collection<GasPump> getGasPumps() {
-		// TODO Auto-generated method stub
-		return null;
+		LinkedList<GasPump> clonePumpList = new LinkedList<GasPump>();
+		for (LinkedList<GasPump> pumpList : pumpMap.values()) {
+			for (GasPump pump : pumpList) {
+				GasPump clonePump = new GasPump(pump.getGasType(), pump.getRemainingAmount());
+				clonePumpList.add(clonePump);
+			}
+		}
+		return clonePumpList;
 	}
 
 	public double buyGas(GasType type, double amountInLiters, double maxPricePerLiter)
