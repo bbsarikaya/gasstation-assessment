@@ -116,6 +116,7 @@ public class GasStationImplTest {
 		station.buyGas(GasType.DIESEL, 20.0, 5.0);
 	}
 	
+	@Test(expected = NotEnoughGasException.class)
 	public void testBuyGasWhenNoGas() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createStation();
 		station.buyGas(GasType.SUPER, 10.0, 5.0);
