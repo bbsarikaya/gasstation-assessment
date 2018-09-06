@@ -107,7 +107,15 @@ public class GasStationImplTest {
 	@Test
 	public void testBuyGas() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createStation();
-	    station.buyGas(GasType.DIESEL, 10.0, 5.0);
+	    double totalPrice = station.buyGas(GasType.DIESEL, 12.0, 5.0);
+	    assertEquals(60.0, totalPrice, 0);
+	}
+	
+	@Test(expected = NotEnoughGasException.class)
+	public void testBuyGasForMultipleSales() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createStation();
+	    station.buyGas(GasType.DIESEL, 12.0, 5.0);
+	    station.buyGas(GasType.DIESEL, 12.0, 5.0);
 	}
 	
 	@Test(expected = NotEnoughGasException.class)
