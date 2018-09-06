@@ -35,5 +35,23 @@ public class GasStationImplTest {
 		assertEquals(GasType.DIESEL, returnedPump.getGasType());
 		assertEquals(100.0, returnedPump.getRemainingAmount(), 0);
 	}
+
+	@Test
+	public void testGasPumpsWithMorePumps() {
+		GasStationImpl station = new GasStationImpl();
+		GasPump pumpDiesel = new GasPump(GasType.DIESEL, 100.0);
+		GasPump pumpRegular = new GasPump(GasType.REGULAR, 90.0);
+		GasPump pumpSuper = new GasPump(GasType.SUPER, 80.0);
+
+		station.addGasPump(pumpDiesel);
+		station.addGasPump(pumpRegular);
+		station.addGasPump(pumpSuper);
+
+		Collection<GasPump> pumps = station.getGasPumps();
+		assertEquals(3, pumps.size());
+		assertFalse(pumps.contains(pumpDiesel));
+		assertFalse(pumps.contains(pumpRegular));
+		assertFalse(pumps.contains(pumpSuper));
+	}
 	
 }
