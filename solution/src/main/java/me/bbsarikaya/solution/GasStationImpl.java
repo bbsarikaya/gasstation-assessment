@@ -40,8 +40,28 @@ public class GasStationImpl implements GasStation {
 
 	public double buyGas(GasType type, double amountInLiters, double maxPricePerLiter)
 			throws NotEnoughGasException, GasTooExpensiveException {
-		// TODO Auto-generated method stub
-		return 0;
+		GasPump pump = findAvailablePump(type, amountInLiters);
+		if (null == pump) {
+			throw new NotEnoughGasException();
+		} else {
+			if (getPrice(type) <= maxPricePerLiter) {
+				pump.pumpGas(amountInLiters);
+				return getPrice(type) * amountInLiters;
+			} else {
+				throw new GasTooExpensiveException();
+			}
+		}
+	}
+
+	private GasPump findAvailablePump(GasType type, double liters) {
+		if (pumpMap.containsKey(type) && pumpMap.get(type).size() > 0) {
+			for (GasPump pump : pumpMap.get(type)) {
+				if (pump.getRemainingAmount() > liters) {
+					return pump;
+				}
+			}
+		}
+		return null;
 	}
 
 	public double getRevenue() {
