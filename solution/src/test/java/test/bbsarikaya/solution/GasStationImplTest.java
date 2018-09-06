@@ -53,5 +53,55 @@ public class GasStationImplTest {
 		assertFalse(pumps.contains(pumpRegular));
 		assertFalse(pumps.contains(pumpSuper));
 	}
+
+	@Test
+	public void testPriceWhenNoPriceSet() {
+		GasStationImpl station = new GasStationImpl();
+		
+		assertEquals(-1.0, station.getPrice(GasType.DIESEL), 0);
+		assertEquals(-1.0, station.getPrice(GasType.REGULAR), 0);
+		assertEquals(-1.0, station.getPrice(GasType.SUPER), 0);
+	}
+
+	@Test
+	public void testPrice() {
+		GasStationImpl station = new GasStationImpl();
+		station.setPrice(GasType.DIESEL, 10.0);
+		station.setPrice(GasType.REGULAR, 5.0);
+		station.setPrice(GasType.SUPER, 15.0);
+
+		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+		assertEquals(5.0, station.getPrice(GasType.REGULAR), 0);
+		assertEquals(15.0, station.getPrice(GasType.SUPER), 0);
+	}
+
+	@Test
+	public void testPriceReset() {
+		GasStationImpl station = new GasStationImpl();
+
+		station.setPrice(GasType.DIESEL, 10.0);
+		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+
+		station.setPrice(GasType.DIESEL, 15.0);
+		assertEquals(15.0, station.getPrice(GasType.DIESEL), 0);
+	}
 	
+	@Test
+	public void testNegativePrice() {
+		GasStationImpl station = new GasStationImpl();
+		
+		station.setPrice(GasType.DIESEL, -10.0);
+		assertEquals(-1.0, station.getPrice(GasType.DIESEL), 0);
+	}
+	
+	@Test
+	public void testNegativePriceReset() {
+		GasStationImpl station = new GasStationImpl();
+
+		station.setPrice(GasType.DIESEL, 10.0);
+		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+
+		station.setPrice(GasType.DIESEL, -15.0);
+		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+	}
 }
