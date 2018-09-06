@@ -75,6 +75,8 @@ public class GasStationImpl implements GasStation {
 	public void setPrice(GasType type, double price) {
 		if (price >= 0.0) {
 			priceMap.put(type, price);
+		} else {
+			priceMap.put(type, 0.0);
 		}
 	}
 

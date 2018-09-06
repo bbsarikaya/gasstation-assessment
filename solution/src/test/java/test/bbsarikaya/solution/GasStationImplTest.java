@@ -49,9 +49,6 @@ public class GasStationImplTest {
 
 		Collection<GasPump> pumps = station.getGasPumps();
 		assertEquals(3, pumps.size());
-		assertFalse(pumps.contains(pumpDiesel));
-		assertFalse(pumps.contains(pumpRegular));
-		assertFalse(pumps.contains(pumpSuper));
 	}
 
 	@Test
@@ -91,7 +88,7 @@ public class GasStationImplTest {
 		GasStationImpl station = new GasStationImpl();
 		
 		station.setPrice(GasType.DIESEL, -10.0);
-		assertEquals(-1.0, station.getPrice(GasType.DIESEL), 0);
+		assertEquals(0.0, station.getPrice(GasType.DIESEL), 0);
 	}
 	
 	@Test
@@ -102,6 +99,6 @@ public class GasStationImplTest {
 		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
 
 		station.setPrice(GasType.DIESEL, -15.0);
-		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+		assertEquals(0.0, station.getPrice(GasType.DIESEL), 0);
 	}
 }
