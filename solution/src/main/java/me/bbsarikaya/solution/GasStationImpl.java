@@ -13,9 +13,11 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 public class GasStationImpl implements GasStation {
 
 	private HashMap<GasType, LinkedList<GasPump>> pumpMap;
+	private HashMap<GasType, Double> priceMap;
 
 	public GasStationImpl() {
 		pumpMap = new HashMap<GasType, LinkedList<GasPump>>();
+		priceMap = new HashMap<GasType, Double>();
 	}
 
 	public void addGasPump(GasPump pump) {
@@ -62,14 +64,18 @@ public class GasStationImpl implements GasStation {
 		return 0;
 	}
 
+	// returns -1.0 for prices that are not set yet
 	public double getPrice(GasType type) {
-		// TODO Auto-generated method stub
-		return 0;
+		if (priceMap.containsKey(type)) {
+			return priceMap.get(type);
+		}
+		return -1.0;
 	}
 
 	public void setPrice(GasType type, double price) {
-		// TODO Auto-generated method stub
-		
+		if (price >= 0.0) {
+			priceMap.put(type, price);
+		}
 	}
 
 }
