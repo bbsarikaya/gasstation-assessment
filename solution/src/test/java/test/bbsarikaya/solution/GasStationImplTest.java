@@ -14,6 +14,14 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 public class GasStationImplTest {
 
+	private static final double PRICE_LOW = 5.0;
+	private static final double PRICE_NORMAL = 10.0;
+	private static final double PRICE_HIGH = 15.0;
+
+	private static final double PUMP_LITERS_LOW = 1.0;
+	private static final double PUMP_LITERS_MAX = 5.0;
+	private static final double PUMP_LITERS_OVER = 15.0;
+
 	@Test
 	public void testGetGasPumpsWhenNoPump() {
 		GasStationImpl station = new GasStationImpl();
@@ -26,7 +34,7 @@ public class GasStationImplTest {
 	@Test
 	public void testGasPumps() {
 		GasStationImpl station = new GasStationImpl();
-		GasPump pump = new GasPump(GasType.DIESEL, 100.0);
+		GasPump pump = new GasPump(GasType.DIESEL, PUMP_LITERS_MAX);
 		station.addGasPump(pump);
 
 		Collection<GasPump> pumps = station.getGasPumps();
@@ -35,15 +43,15 @@ public class GasStationImplTest {
 
 		GasPump returnedPump = (GasPump) pumps.toArray()[0];
 		assertEquals(GasType.DIESEL, returnedPump.getGasType());
-		assertEquals(100.0, returnedPump.getRemainingAmount(), 0);
+		assertEquals(PUMP_LITERS_MAX, returnedPump.getRemainingAmount(), 0);
 	}
 
 	@Test
 	public void testGasPumpsWithMorePumps() {
 		GasStationImpl station = new GasStationImpl();
-		GasPump pumpDiesel = new GasPump(GasType.DIESEL, 100.0);
-		GasPump pumpRegular = new GasPump(GasType.REGULAR, 90.0);
-		GasPump pumpSuper = new GasPump(GasType.SUPER, 80.0);
+		GasPump pumpDiesel = new GasPump(GasType.DIESEL, PUMP_LITERS_MAX);
+		GasPump pumpRegular = new GasPump(GasType.REGULAR, PUMP_LITERS_MAX);
+		GasPump pumpSuper = new GasPump(GasType.SUPER, PUMP_LITERS_MAX);
 
 		station.addGasPump(pumpDiesel);
 		station.addGasPump(pumpRegular);
@@ -62,171 +70,171 @@ public class GasStationImplTest {
 	@Test
 	public void testPrice() {
 		GasStationImpl station = new GasStationImpl();
-		station.setPrice(GasType.DIESEL, 10.0);
-		station.setPrice(GasType.REGULAR, 5.0);
-		station.setPrice(GasType.SUPER, 15.0);
+		station.setPrice(GasType.DIESEL, PRICE_LOW);
+		station.setPrice(GasType.REGULAR, PRICE_NORMAL);
+		station.setPrice(GasType.SUPER, PRICE_HIGH);
 
-		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
-		assertEquals(5.0, station.getPrice(GasType.REGULAR), 0);
-		assertEquals(15.0, station.getPrice(GasType.SUPER), 0);
+		assertEquals(PRICE_LOW, station.getPrice(GasType.DIESEL), 0);
+		assertEquals(PRICE_NORMAL, station.getPrice(GasType.REGULAR), 0);
+		assertEquals(PRICE_HIGH, station.getPrice(GasType.SUPER), 0);
 	}
 
 	@Test
 	public void testPriceReset() {
 		GasStationImpl station = new GasStationImpl();
 
-		station.setPrice(GasType.DIESEL, 10.0);
-		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
+		station.setPrice(GasType.DIESEL, PRICE_LOW);
+		assertEquals(PRICE_LOW, station.getPrice(GasType.DIESEL), 0);
 
-		station.setPrice(GasType.DIESEL, 15.0);
-		assertEquals(15.0, station.getPrice(GasType.DIESEL), 0);
+		station.setPrice(GasType.DIESEL, PRICE_HIGH);
+		assertEquals(PRICE_HIGH, station.getPrice(GasType.DIESEL), 0);
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testNegativePrice() {
-		GasStationImpl station = new GasStationImpl();		
+		GasStationImpl station = new GasStationImpl();
 		station.setPrice(GasType.DIESEL, -10.0);
 	}
-	
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testZeroPrice() {
-		GasStationImpl station = new GasStationImpl();		
+		GasStationImpl station = new GasStationImpl();
 		station.setPrice(GasType.DIESEL, 0.0);
 	}
-	
+
 	@Test
 	public void testBuyGas() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-	    double totalPrice = station.buyGas(GasType.DIESEL, 12.0, 5.0);
-	    assertEquals(36.0, totalPrice, 0);
+		double totalPrice = station.buyGas(GasType.DIESEL, PUMP_LITERS_LOW, PRICE_HIGH);
+		assertEquals(PUMP_LITERS_LOW * PRICE_NORMAL, totalPrice, 0);
 	}
-	
-	@Test(expected = NotEnoughGasException.class)
+
+	@Test
 	public void testBuyGasForMultipleSales() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-	    station.buyGas(GasType.DIESEL, 12.0, 5.0);
-	    station.buyGas(GasType.DIESEL, 12.0, 5.0);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_LOW, PRICE_NORMAL);
 	}
-	
+
 	@Test(expected = NotEnoughGasException.class)
 	public void testBuyGasWhenNotEnoughGas() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-		station.buyGas(GasType.DIESEL, 20.0, 5.0);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_OVER, PRICE_NORMAL);
 	}
-	
+
 	@Test(expected = NotEnoughGasException.class)
 	public void testBuyGasWhenNoGas() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-		station.buyGas(GasType.SUPER, 10.0, 5.0);
+		station.buyGas(GasType.SUPER, PUMP_LITERS_MAX, PRICE_NORMAL);
 	}
-	
+
 	@Test(expected = GasTooExpensiveException.class)
 	public void testBuyGasWhenGasTooExpensive() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-		station.buyGas(GasType.DIESEL, 5.0, 2.0);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_LOW);
 	}
 
-	private GasStationImpl createTestStation() {
-		GasStationImpl station = new GasStationImpl();
-		station.addGasPump(new GasPump(GasType.DIESEL, 10.0));
-		station.addGasPump(new GasPump(GasType.DIESEL, 15.0));
-		station.setPrice(GasType.DIESEL, 3.0);		
-		return station;
-	}
-	
 	@Test
 	public void testGetInitialRevenue() {
 		GasStationImpl station = createTestStation();
 		assertEquals(0.0, station.getRevenue(), 0.0);
 	}
-	
+
 	@Test
 	public void testGetRevenue() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
 		double totalRevenue = 0.0;
-		totalRevenue += station.buyGas(GasType.DIESEL, 10, 5.0);
+		totalRevenue += station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 		assertEquals(totalRevenue, station.getRevenue(), 0.0);
-		totalRevenue += station.buyGas(GasType.DIESEL, 5, 5.0);
+		totalRevenue += station.buyGas(GasType.DIESEL, PUMP_LITERS_LOW, PRICE_HIGH);
 		assertEquals(totalRevenue, station.getRevenue(), 0.0);
 	}
-	
+
 	@Test
 	public void testGetRevenueWithException() {
 		GasStationImpl station = createTestStation();
-		double expectedRevenue = 30.0;
+		double expectedRevenue = PUMP_LITERS_MAX * PRICE_NORMAL;
 		try {
-			station.buyGas(GasType.DIESEL, 10, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 			assertEquals(expectedRevenue, station.getRevenue(), 0.0);
-			station.buyGas(GasType.DIESEL, 5000, 5.0);	
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_OVER, PRICE_NORMAL);
 		} catch (Exception e) {
-			assertEquals(expectedRevenue, station.getRevenue(), 0.0);	
+			assertEquals(expectedRevenue, station.getRevenue(), 0.0);
 		}
 	}
-	
+
 	@Test
 	public void testGetInitialNumberOfSales() {
 		GasStationImpl station = createTestStation();
 		assertEquals(0, station.getNumberOfSales());
 	}
-	
+
 	@Test
 	public void testGetNumberOfSales() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
-		station.buyGas(GasType.DIESEL, 10, 5.0);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 		assertEquals(1, station.getNumberOfSales());
-		station.buyGas(GasType.DIESEL, 5, 5.0);
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 		assertEquals(2, station.getNumberOfSales());
 	}
-	
+
 	@Test
 	public void testGetNumberOfSalesWithException() {
 		GasStationImpl station = createTestStation();
 		try {
-			station.buyGas(GasType.DIESEL, 10, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 			assertEquals(1, station.getNumberOfSales());
-			station.buyGas(GasType.DIESEL, 5000, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_OVER, PRICE_NORMAL);
 		} catch (Exception e) {
-			assertEquals(1, station.getNumberOfSales());	
-		}	
+			assertEquals(1, station.getNumberOfSales());
+		}
 	}
-	
+
 	@Test
 	public void testGetInitialNumberOfCancellationsNoGas() {
 		GasStationImpl station = createTestStation();
 		assertEquals(0, station.getNumberOfCancellationsNoGas());
 	}
-	
+
 	@Test
 	public void testGetNumberOfCancellationsNoGas() {
 		GasStationImpl station = createTestStation();
 		try {
-			station.buyGas(GasType.DIESEL, 10, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 			assertEquals(0, station.getNumberOfCancellationsNoGas());
-			station.buyGas(GasType.DIESEL, 5000, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_OVER, PRICE_NORMAL);
 		} catch (NotEnoughGasException e) {
 			assertEquals(1, station.getNumberOfCancellationsNoGas());
 		} catch (Exception e) {
 			fail();
 		}
 	}
-	
+
 	@Test
 	public void testGetInitialNumberOfCancellationsTooExpensive() {
 		GasStationImpl station = createTestStation();
 		assertEquals(0, station.getNumberOfCancellationsTooExpensive());
 	}
-	
+
 	@Test
 	public void testGetNumberOfCancellationsTooExpensive() {
 		GasStationImpl station = createTestStation();
 		try {
-			station.buyGas(GasType.DIESEL, 10, 5.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_NORMAL);
 			assertEquals(0, station.getNumberOfCancellationsTooExpensive());
-			station.buyGas(GasType.DIESEL, 5, 2.0);
+			station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_LOW);
 		} catch (GasTooExpensiveException e) {
 			assertEquals(1, station.getNumberOfCancellationsTooExpensive());
 		} catch (Exception e) {
 			fail();
 		}
+	}
+
+	private GasStationImpl createTestStation() {
+		GasStationImpl station = new GasStationImpl();
+		station.addGasPump(new GasPump(GasType.DIESEL, PUMP_LITERS_MAX));
+		station.addGasPump(new GasPump(GasType.DIESEL, PUMP_LITERS_MAX));
+		station.setPrice(GasType.DIESEL, PRICE_NORMAL);
+		return station;
 	}
 }
