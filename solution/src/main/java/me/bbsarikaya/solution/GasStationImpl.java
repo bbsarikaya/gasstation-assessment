@@ -84,12 +84,11 @@ public class GasStationImpl implements GasStation {
 		return 0;
 	}
 
-	// returns -1.0 for prices that are not set yet
 	public double getPrice(GasType type) {
 		if (priceMap.containsKey(type)) {
 			return priceMap.get(type);
 		}
-		return -1.0;
+		throw new IllegalStateException();
 	}
 
 	public void setPrice(GasType type, double price) {

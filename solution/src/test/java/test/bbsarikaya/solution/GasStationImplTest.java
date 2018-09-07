@@ -53,13 +53,10 @@ public class GasStationImplTest {
 		assertEquals(3, pumps.size());
 	}
 
-	@Test
+	@Test(expected = IllegalStateException.class)
 	public void testPriceWhenNoPriceSet() {
 		GasStationImpl station = new GasStationImpl();
-		
-		assertEquals(-1.0, station.getPrice(GasType.DIESEL), 0);
-		assertEquals(-1.0, station.getPrice(GasType.REGULAR), 0);
-		assertEquals(-1.0, station.getPrice(GasType.SUPER), 0);
+		station.getPrice(GasType.DIESEL);
 	}
 
 	@Test
