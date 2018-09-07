@@ -88,14 +88,14 @@ public class GasStationImpl implements GasStation {
 		if (priceMap.containsKey(type)) {
 			return priceMap.get(type);
 		}
-		throw new IllegalStateException();
+		throw new IllegalStateException("Cannot get price of missing gas type!");
 	}
 
 	public void setPrice(GasType type, double price) {
-		if (price >= 0.0) {
+		if (price > 0.0) {
 			priceMap.put(type, price);
 		} else {
-			priceMap.put(type, 0.0);
+			throw new IllegalArgumentException("Price must be greater than 0!");
 		}
 	}
 

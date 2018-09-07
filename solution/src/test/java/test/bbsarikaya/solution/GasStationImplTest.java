@@ -82,23 +82,16 @@ public class GasStationImplTest {
 		assertEquals(15.0, station.getPrice(GasType.DIESEL), 0);
 	}
 	
-	@Test
+	@Test(expected = IllegalArgumentException.class)
 	public void testNegativePrice() {
-		GasStationImpl station = new GasStationImpl();
-		
+		GasStationImpl station = new GasStationImpl();		
 		station.setPrice(GasType.DIESEL, -10.0);
-		assertEquals(0.0, station.getPrice(GasType.DIESEL), 0);
 	}
 	
-	@Test
-	public void testNegativePriceReset() {
-		GasStationImpl station = new GasStationImpl();
-
-		station.setPrice(GasType.DIESEL, 10.0);
-		assertEquals(10.0, station.getPrice(GasType.DIESEL), 0);
-
-		station.setPrice(GasType.DIESEL, -15.0);
-		assertEquals(0.0, station.getPrice(GasType.DIESEL), 0);
+	@Test(expected = IllegalArgumentException.class)
+	public void testZeroPrice() {
+		GasStationImpl station = new GasStationImpl();		
+		station.setPrice(GasType.DIESEL, 0.0);
 	}
 	
 	@Test
