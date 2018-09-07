@@ -190,4 +190,43 @@ public class GasStationImplTest {
 		}	
 	}
 	
+	@Test
+	public void testGetInitialNumberOfCancellationsNoGas() {
+		GasStationImpl station = createTestStation();
+		assertEquals(0, station.getNumberOfCancellationsNoGas());
+	}
+	
+	@Test
+	public void testGetNumberOfCancellationsNoGas() {
+		GasStationImpl station = createTestStation();
+		try {
+			station.buyGas(GasType.DIESEL, 10, 5.0);
+			assertEquals(0, station.getNumberOfCancellationsNoGas());
+			station.buyGas(GasType.DIESEL, 5000, 5.0);
+		} catch (NotEnoughGasException e) {
+			assertEquals(1, station.getNumberOfCancellationsNoGas());
+		} catch (Exception e) {
+			fail();
+		}
+	}
+	
+	@Test
+	public void testGetInitialNumberOfCancellationsTooExpensive() {
+		GasStationImpl station = createTestStation();
+		assertEquals(0, station.getNumberOfCancellationsTooExpensive());
+	}
+	
+	@Test
+	public void testGetNumberOfCancellationsTooExpensive() {
+		GasStationImpl station = createTestStation();
+		try {
+			station.buyGas(GasType.DIESEL, 10, 5.0);
+			assertEquals(0, station.getNumberOfCancellationsTooExpensive());
+			station.buyGas(GasType.DIESEL, 5, 2.0);
+		} catch (GasTooExpensiveException e) {
+			assertEquals(1, station.getNumberOfCancellationsTooExpensive());
+		} catch (Exception e) {
+			fail();
+		}
+	}
 }
