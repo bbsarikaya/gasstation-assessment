@@ -56,7 +56,7 @@ public class GasStationImpl implements GasStation {
 	private GasPump findAvailablePump(GasType type, double liters) {
 		if (pumpMap.containsKey(type) && pumpMap.get(type).size() > 0) {
 			for (GasPump pump : pumpMap.get(type)) {
-				if (pump.getRemainingAmount() > liters) {
+				if (pump.getRemainingAmount() >= liters) {
 					return pump;
 				}
 			}
