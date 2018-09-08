@@ -133,6 +133,18 @@ public class GasStationImplTest {
 		GasStationImpl station = createTestStation();
 		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, PRICE_LOW);
 	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testBuyGasWithInvalidAmount() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createTestStation();
+		station.buyGas(GasType.DIESEL, -10.0, PRICE_LOW);
+	}
+	
+	@Test(expected = IllegalArgumentException.class)
+	public void testBuyGasWithInvalidPrice() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createTestStation();
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, -5.0);
+	}
 
 	@Test
 	public void testGetInitialRevenue() {

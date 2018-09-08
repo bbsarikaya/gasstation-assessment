@@ -40,6 +40,9 @@ public class GasStationImpl implements GasStation {
 
 	public double buyGas(GasType type, double amountInLiters, double maxPricePerLiter)
 			throws NotEnoughGasException, GasTooExpensiveException {
+		if (amountInLiters <= 0 || maxPricePerLiter <= 0) {
+			throw new IllegalArgumentException("Amount and price must be greater than zero!");
+		}
 		GasPump pump = findAvailablePump(type, amountInLiters);
 		if (null == pump) {
 			throw new NotEnoughGasException();
