@@ -1,9 +1,10 @@
 package me.bbsarikaya.solution;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
 
+import me.bbsarikaya.solution.GasTransaction.Status;
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
 import net.bigpoint.assessment.gasstation.GasType;
@@ -12,24 +13,26 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 public class GasStationImpl implements GasStation {
 
-	private HashMap<GasType, LinkedList<GasPump>> pumpMap;
+	private HashMap<GasType, ArrayList<GasPump>> pumpMap;
 	private HashMap<GasType, Double> priceMap;
+	private HashMap<GasTransaction.Status, ArrayList<GasTransaction>> transactionMap;
 
 	public GasStationImpl() {
-		pumpMap = new HashMap<GasType, LinkedList<GasPump>>();
+		pumpMap = new HashMap<GasType, ArrayList<GasPump>>();
 		priceMap = new HashMap<GasType, Double>();
+		transactionMap = new HashMap<GasTransaction.Status, ArrayList<GasTransaction>>();
 	}
 
 	public void addGasPump(GasPump pump) {
 		if (!pumpMap.containsKey(pump.getGasType())) {
-			pumpMap.put(pump.getGasType(), new LinkedList<GasPump>());
+			pumpMap.put(pump.getGasType(), new ArrayList<GasPump>());
 		}
 		pumpMap.get(pump.getGasType()).add(pump);
 	}
 
 	public Collection<GasPump> getGasPumps() {
-		LinkedList<GasPump> clonePumpList = new LinkedList<GasPump>();
-		for (LinkedList<GasPump> pumpList : pumpMap.values()) {
+		ArrayList<GasPump> clonePumpList = new ArrayList<GasPump>();
+		for (ArrayList<GasPump> pumpList : pumpMap.values()) {
 			for (GasPump pump : pumpList) {
 				GasPump clonePump = new GasPump(pump.getGasType(), pump.getRemainingAmount());
 				clonePumpList.add(clonePump);
@@ -45,12 +48,15 @@ public class GasStationImpl implements GasStation {
 		}
 		GasPump pump = findAvailablePump(type, amountInLiters);
 		if (null == pump) {
+			addTransaction(GasTransaction.Status.CANCELLED_NOGAS, type, amountInLiters);
 			throw new NotEnoughGasException();
 		} else {
 			if (getPrice(type) <= maxPricePerLiter) {
 				pump.pumpGas(amountInLiters);
+				addTransaction(GasTransaction.Status.SUCCESS, type, amountInLiters);
 				return getPrice(type) * amountInLiters;
 			} else {
+				addTransaction(GasTransaction.Status.CANCELLED_TOOEXPENSIVE, type, amountInLiters);
 				throw new GasTooExpensiveException();
 			}
 		}
@@ -67,23 +73,41 @@ public class GasStationImpl implements GasStation {
 		return null;
 	}
 
+	private void addTransaction(Status status, GasType type, double amount) {
+		if (!transactionMap.containsKey(status)) {
+			transactionMap.put(status, new ArrayList<GasTransaction>());
+		}
+		transactionMap.get(status).add(GasTransaction.create(status, type, amount, getPrice(type)));
+	}
+
 	public double getRevenue() {
-		// TODO Auto-generated method stub
-		return 0;
+		double revenue = 0;
+		if (transactionMap.containsKey(GasTransaction.Status.SUCCESS)) {
+			for (GasTransaction transaction : transactionMap.get(GasTransaction.Status.SUCCESS)) {
+				revenue += transaction.getTotalPrice();
+			}
+		}
+		return revenue;
 	}
 
 	public int getNumberOfSales() {
-		// TODO Auto-generated method stub
+		if (transactionMap.containsKey(GasTransaction.Status.SUCCESS)) {
+			return transactionMap.get(GasTransaction.Status.SUCCESS).size();
+		}
 		return 0;
 	}
 
 	public int getNumberOfCancellationsNoGas() {
-		// TODO Auto-generated method stub
+		if (transactionMap.containsKey(GasTransaction.Status.CANCELLED_NOGAS)) {
+			return transactionMap.get(GasTransaction.Status.CANCELLED_NOGAS).size();
+		}
 		return 0;
 	}
 
 	public int getNumberOfCancellationsTooExpensive() {
-		// TODO Auto-generated method stub
+		if (transactionMap.containsKey(GasTransaction.Status.CANCELLED_TOOEXPENSIVE)) {
+			return transactionMap.get(GasTransaction.Status.CANCELLED_TOOEXPENSIVE).size();
+		}
 		return 0;
 	}
 
