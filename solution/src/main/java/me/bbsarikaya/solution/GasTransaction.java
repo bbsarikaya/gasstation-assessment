@@ -14,18 +14,29 @@ public class GasTransaction {
 	private double gasPrice;
 
 	public static GasTransaction create(Status status, GasType type, double amount, double price) {
-		return new GasTransaction(status, type, amount, price);
+		if (amount > 0 && price > 0) {
+			return new GasTransaction(status, type, amount, price);
+		} else {
+			throw new IllegalArgumentException("Amount and price must be greater than zero!");
+		}
 	}
 
 	private GasTransaction(Status status, GasType type, double amount, double price) {
-		// TODO: Implement
+		this.status = status;
+		this.gasType = type;
+		this.gasAmount = amount;
+		this.gasPrice = price;
 	}
 
 	/**
-	 * @return total price for the transaction
+	 * @return total price of successful transaction
 	 */
 	public double getTotalPrice() {
-		return -1;
+		if (status.equals(Status.SUCCESS)) {
+			return gasAmount * gasPrice;
+		} else {
+			throw new IllegalStateException("Cancelled transaction cannot have total price!");
+		}
 	}
 
 	public Status getStatus() {
