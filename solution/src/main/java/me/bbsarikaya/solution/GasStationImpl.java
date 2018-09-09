@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 
-import me.bbsarikaya.solution.GasTransaction.Status;
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
 import net.bigpoint.assessment.gasstation.GasType;
@@ -15,12 +14,12 @@ public class GasStationImpl implements GasStation {
 
 	private HashMap<GasType, ArrayList<GasPump>> pumpMap;
 	private HashMap<GasType, Double> priceMap;
-	private HashMap<GasTransaction.Status, ArrayList<GasTransaction>> transactionMap;
+	private TransactionStats stats;
 
 	public GasStationImpl() {
 		pumpMap = new HashMap<GasType, ArrayList<GasPump>>();
 		priceMap = new HashMap<GasType, Double>();
-		transactionMap = new HashMap<GasTransaction.Status, ArrayList<GasTransaction>>();
+		stats = new TransactionStats();
 	}
 
 	public void addGasPump(GasPump pump) {
@@ -30,6 +29,7 @@ public class GasStationImpl implements GasStation {
 		pumpMap.get(pump.getGasType()).add(pump);
 	}
 
+	// returns pumps' clones to forbid manipulating actual data
 	public Collection<GasPump> getGasPumps() {
 		ArrayList<GasPump> clonePumpList = new ArrayList<GasPump>();
 		for (ArrayList<GasPump> pumpList : pumpMap.values()) {
@@ -48,15 +48,15 @@ public class GasStationImpl implements GasStation {
 		}
 		GasPump pump = findAvailablePump(type, amountInLiters);
 		if (null == pump) {
-			addTransaction(GasTransaction.Status.CANCELLED_NOGAS, type, amountInLiters);
+			stats.logCancellationNoGas();
 			throw new NotEnoughGasException();
 		} else {
 			if (getPrice(type) <= maxPricePerLiter) {
 				pump.pumpGas(amountInLiters);
-				addTransaction(GasTransaction.Status.SUCCESS, type, amountInLiters);
+				stats.logSale(getPrice(type) * amountInLiters);
 				return getPrice(type) * amountInLiters;
 			} else {
-				addTransaction(GasTransaction.Status.CANCELLED_TOOEXPENSIVE, type, amountInLiters);
+				stats.logCancellationTooExpensive();
 				throw new GasTooExpensiveException();
 			}
 		}
@@ -73,42 +73,20 @@ public class GasStationImpl implements GasStation {
 		return null;
 	}
 
-	private void addTransaction(Status status, GasType type, double amount) {
-		if (!transactionMap.containsKey(status)) {
-			transactionMap.put(status, new ArrayList<GasTransaction>());
-		}
-		transactionMap.get(status).add(GasTransaction.create(status, type, amount, getPrice(type)));
-	}
-
 	public double getRevenue() {
-		double revenue = 0;
-		if (transactionMap.containsKey(GasTransaction.Status.SUCCESS)) {
-			for (GasTransaction transaction : transactionMap.get(GasTransaction.Status.SUCCESS)) {
-				revenue += transaction.getTotalPrice();
-			}
-		}
-		return revenue;
+		return stats.getRevenue();
 	}
 
 	public int getNumberOfSales() {
-		if (transactionMap.containsKey(GasTransaction.Status.SUCCESS)) {
-			return transactionMap.get(GasTransaction.Status.SUCCESS).size();
-		}
-		return 0;
+		return stats.getNumberOfSales();
 	}
 
 	public int getNumberOfCancellationsNoGas() {
-		if (transactionMap.containsKey(GasTransaction.Status.CANCELLED_NOGAS)) {
-			return transactionMap.get(GasTransaction.Status.CANCELLED_NOGAS).size();
-		}
-		return 0;
+		return stats.getNumberOfCancellationNoGas();
 	}
 
 	public int getNumberOfCancellationsTooExpensive() {
-		if (transactionMap.containsKey(GasTransaction.Status.CANCELLED_TOOEXPENSIVE)) {
-			return transactionMap.get(GasTransaction.Status.CANCELLED_TOOEXPENSIVE).size();
-		}
-		return 0;
+		return stats.getNumberOfCancellationTooExpensive();
 	}
 
 	public double getPrice(GasType type) {

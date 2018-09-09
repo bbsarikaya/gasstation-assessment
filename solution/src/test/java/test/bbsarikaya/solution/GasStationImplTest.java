@@ -23,7 +23,7 @@ public class GasStationImplTest {
 	private static final double PUMP_LITERS_OVER = 15.0;
 
 	@Test
-	public void testGetGasPumpsWhenNoPump() {
+	public void testGasPumpsWhenNoPump() {
 		GasStationImpl station = new GasStationImpl();
 
 		Collection<GasPump> pumps = station.getGasPumps();
@@ -39,7 +39,7 @@ public class GasStationImplTest {
 
 		Collection<GasPump> pumps = station.getGasPumps();
 		assertEquals(1, pumps.size());
-		assertFalse(pumps.contains(pump)); // to forbid manipulating actual data
+		assertFalse(pumps.contains(pump)); // must return actual pump's clone
 
 		GasPump returnedPump = (GasPump) pumps.toArray()[0];
 		assertEquals(GasType.DIESEL, returnedPump.getGasType());
@@ -128,6 +128,12 @@ public class GasStationImplTest {
 		station.buyGas(GasType.SUPER, PUMP_LITERS_MAX, PRICE_NORMAL);
 	}
 
+	@Test(expected = NotEnoughGasException.class)
+	public void testBuyGasWhenNoPump() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createTestStation();
+		station.buyGas(GasType.REGULAR, PUMP_LITERS_MAX, PRICE_NORMAL);
+	}
+
 	@Test(expected = GasTooExpensiveException.class)
 	public void testBuyGasWhenGasTooExpensive() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
@@ -141,9 +147,21 @@ public class GasStationImplTest {
 	}
 
 	@Test(expected = IllegalArgumentException.class)
+	public void testBuyGasWithZeroAmount() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createTestStation();
+		station.buyGas(GasType.DIESEL, 0.0, PRICE_LOW);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
 	public void testBuyGasWithInvalidPrice() throws NotEnoughGasException, GasTooExpensiveException {
 		GasStationImpl station = createTestStation();
 		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, -5.0);
+	}
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testBuyGasWithZeroPrice() throws NotEnoughGasException, GasTooExpensiveException {
+		GasStationImpl station = createTestStation();
+		station.buyGas(GasType.DIESEL, PUMP_LITERS_MAX, 0.0);
 	}
 
 	@Test
@@ -246,6 +264,7 @@ public class GasStationImplTest {
 		GasStationImpl station = new GasStationImpl();
 		station.addGasPump(new GasPump(GasType.DIESEL, PUMP_LITERS_MAX));
 		station.addGasPump(new GasPump(GasType.DIESEL, PUMP_LITERS_MAX));
+		station.addGasPump(new GasPump(GasType.SUPER, PUMP_LITERS_LOW));
 		station.setPrice(GasType.DIESEL, PRICE_NORMAL);
 		station.setPrice(GasType.REGULAR, PRICE_NORMAL);
 		station.setPrice(GasType.SUPER, PRICE_NORMAL);
