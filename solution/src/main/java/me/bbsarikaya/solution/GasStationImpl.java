@@ -3,6 +3,7 @@ package me.bbsarikaya.solution;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap;
 
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
@@ -13,12 +14,12 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 public class GasStationImpl implements GasStation {
 
 	private HashMap<GasType, ArrayList<GasPump>> pumpMap;
-	private HashMap<GasType, Double> priceMap;
+	private ConcurrentHashMap<GasType, Double> priceMap;
 	private TransactionStats stats;
 
 	public GasStationImpl() {
 		pumpMap = new HashMap<GasType, ArrayList<GasPump>>();
-		priceMap = new HashMap<GasType, Double>();
+		priceMap = new ConcurrentHashMap<GasType, Double>();
 		stats = new TransactionStats();
 	}
 
