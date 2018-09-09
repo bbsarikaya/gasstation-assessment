@@ -2,8 +2,8 @@ package me.bbsarikaya.solution;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
@@ -13,27 +13,25 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 public class GasStationImpl implements GasStation {
 
-	private HashMap<GasType, ArrayList<GasPump>> pumpMap;
+	private ConcurrentHashMap<GasType, CopyOnWriteArrayList<GasPump>> pumpMap;
 	private ConcurrentHashMap<GasType, Double> priceMap;
 	private TransactionStats stats;
 
 	public GasStationImpl() {
-		pumpMap = new HashMap<GasType, ArrayList<GasPump>>();
+		pumpMap = new ConcurrentHashMap<GasType, CopyOnWriteArrayList<GasPump>>();
 		priceMap = new ConcurrentHashMap<GasType, Double>();
 		stats = new TransactionStats();
 	}
 
 	public void addGasPump(GasPump pump) {
-		if (!pumpMap.containsKey(pump.getGasType())) {
-			pumpMap.put(pump.getGasType(), new ArrayList<GasPump>());
-		}
+		pumpMap.putIfAbsent(pump.getGasType(), new CopyOnWriteArrayList<GasPump>());
 		pumpMap.get(pump.getGasType()).add(pump);
 	}
 
 	// returns pumps' clones to forbid manipulating actual data
 	public Collection<GasPump> getGasPumps() {
 		ArrayList<GasPump> clonePumpList = new ArrayList<GasPump>();
-		for (ArrayList<GasPump> pumpList : pumpMap.values()) {
+		for (CopyOnWriteArrayList<GasPump> pumpList : pumpMap.values()) {
 			for (GasPump pump : pumpList) {
 				GasPump clonePump = new GasPump(pump.getGasType(), pump.getRemainingAmount());
 				clonePumpList.add(clonePump);
@@ -104,5 +102,5 @@ public class GasStationImpl implements GasStation {
 			throw new IllegalArgumentException("Price must be greater than 0!");
 		}
 	}
-
+	
 }
