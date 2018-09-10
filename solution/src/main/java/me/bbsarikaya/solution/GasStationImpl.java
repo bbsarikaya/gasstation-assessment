@@ -45,31 +45,25 @@ public class GasStationImpl implements GasStation {
 		if (amountInLiters <= 0 || maxPricePerLiter <= 0) {
 			throw new IllegalArgumentException("Amount and price must be greater than zero!");
 		}
-		GasPump pump = findAvailablePump(type, amountInLiters);
-		if (null == pump) {
-			stats.logCancellationNoGas();
-			throw new NotEnoughGasException();
-		} else {
-			if (getPrice(type) <= maxPricePerLiter) {
-				pump.pumpGas(amountInLiters);
-				stats.logSale(getPrice(type) * amountInLiters);
-				return getPrice(type) * amountInLiters;
-			} else {
-				stats.logCancellationTooExpensive();
-				throw new GasTooExpensiveException();
-			}
-		}
-	}
 
-	private GasPump findAvailablePump(GasType type, double liters) {
-		if (pumpMap.containsKey(type) && pumpMap.get(type).size() > 0) {
-			for (GasPump pump : pumpMap.get(type)) {
-				if (pump.getRemainingAmount() >= liters) {
-					return pump;
-				}
-			}
+		if (getPrice(type) > maxPricePerLiter) {
+			stats.logCancellationTooExpensive();
+			throw new GasTooExpensiveException();
 		}
-		return null;
+
+		if (pumpMap.containsKey(type)) {
+			for (GasPump pump : pumpMap.get(type)) {
+				synchronized (pump) {
+					if (pump.getRemainingAmount() >= amountInLiters) {
+						pump.pumpGas(amountInLiters);
+						stats.logSale(getPrice(type) * amountInLiters);
+						return getPrice(type) * amountInLiters;
+					}
+				}
+			}			
+		}
+		stats.logCancellationNoGas();
+		throw new NotEnoughGasException();
 	}
 
 	public double getRevenue() {
@@ -102,5 +96,5 @@ public class GasStationImpl implements GasStation {
 			throw new IllegalArgumentException("Price must be greater than 0!");
 		}
 	}
-	
+
 }
