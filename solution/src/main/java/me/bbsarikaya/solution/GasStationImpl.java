@@ -2,8 +2,11 @@ package me.bbsarikaya.solution;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.function.Supplier;
+import java.util.stream.Stream;
 
 import net.bigpoint.assessment.gasstation.GasPump;
 import net.bigpoint.assessment.gasstation.GasStation;
@@ -13,27 +16,27 @@ import net.bigpoint.assessment.gasstation.exceptions.NotEnoughGasException;
 
 public class GasStationImpl implements GasStation {
 
-	private ConcurrentHashMap<GasType, CopyOnWriteArrayList<GasPump>> pumpMap;
+	private ConcurrentHashMap<GasType, CopyOnWriteArrayList<PumpHolder>> pumpHolderMap;
 	private ConcurrentHashMap<GasType, Double> priceMap;
 	private TransactionStats stats;
 
 	public GasStationImpl() {
-		pumpMap = new ConcurrentHashMap<GasType, CopyOnWriteArrayList<GasPump>>();
+		pumpHolderMap = new ConcurrentHashMap<GasType, CopyOnWriteArrayList<PumpHolder>>();
 		priceMap = new ConcurrentHashMap<GasType, Double>();
 		stats = new TransactionStats();
 	}
 
 	public void addGasPump(GasPump pump) {
-		pumpMap.putIfAbsent(pump.getGasType(), new CopyOnWriteArrayList<GasPump>());
-		pumpMap.get(pump.getGasType()).add(pump);
+		pumpHolderMap.putIfAbsent(pump.getGasType(), new CopyOnWriteArrayList<PumpHolder>());
+		pumpHolderMap.get(pump.getGasType()).add(new PumpHolder(pump));
 	}
 
 	// returns pumps' clones to forbid manipulating actual data
 	public Collection<GasPump> getGasPumps() {
 		ArrayList<GasPump> clonePumpList = new ArrayList<GasPump>();
-		for (CopyOnWriteArrayList<GasPump> pumpList : pumpMap.values()) {
-			for (GasPump pump : pumpList) {
-				GasPump clonePump = new GasPump(pump.getGasType(), pump.getRemainingAmount());
+		for (CopyOnWriteArrayList<PumpHolder> pumpHolderList : pumpHolderMap.values()) {
+			for (PumpHolder pumpHolder : pumpHolderList) {
+				GasPump clonePump = new GasPump(pumpHolder.pump.getGasType(), pumpHolder.pump.getRemainingAmount());
 				clonePumpList.add(clonePump);
 			}
 		}
@@ -51,19 +54,44 @@ public class GasStationImpl implements GasStation {
 			throw new GasTooExpensiveException();
 		}
 
-		if (pumpMap.containsKey(type)) {
-			for (GasPump pump : pumpMap.get(type)) {
-				synchronized (pump) {
-					if (pump.getRemainingAmount() >= amountInLiters) {
-						pump.pumpGas(amountInLiters);
-						stats.logSale(getPrice(type) * amountInLiters);
-						return getPrice(type) * amountInLiters;
-					}
+		if (pumpHolderMap.containsKey(type)) {
+			CopyOnWriteArrayList<PumpHolder> pumpHolderList = pumpHolderMap.get(type);
+			PumpHolder servingPumpHolder = null;
+			synchronized (pumpHolderList) {
+				servingPumpHolder = findPumpHolder(pumpHolderList, amountInLiters);
+				updateRemaining(servingPumpHolder, amountInLiters);
+			}
+
+			if (null != servingPumpHolder) {
+				GasPump servingPump = servingPumpHolder.pump;
+				synchronized (servingPump) {
+					servingPumpHolder.isAvailable = false;
+					servingPump.pumpGas(amountInLiters);
+					double totalPrice = amountInLiters * getPrice(type);
+					stats.logSale(totalPrice);
+					servingPumpHolder.isAvailable = true;
+					return totalPrice;
 				}
-			}			
+			}
 		}
 		stats.logCancellationNoGas();
 		throw new NotEnoughGasException();
+	}
+
+	private void updateRemaining(PumpHolder pumpHolder, double amountInLiters) {
+		if (null != pumpHolder) {
+			pumpHolder.remainingAmount -= amountInLiters;
+		}
+	}
+
+	private PumpHolder findPumpHolder(CopyOnWriteArrayList<PumpHolder> pumpHolderList, double amountInLiters) {
+		Supplier<Stream<PumpHolder>> pumpsWithEnoughGas = () -> pumpHolderList.stream()
+				.filter(status -> (status.remainingAmount >= amountInLiters))
+				.sorted(Comparator.comparingDouble(holder -> holder.remainingAmount));
+
+		return pumpsWithEnoughGas.get().filter(status -> (status.isAvailable)).findFirst()
+				.orElse(pumpsWithEnoughGas.get().filter(status -> (!status.isAvailable)).findFirst()
+				.orElse(null));
 	}
 
 	public double getRevenue() {
@@ -97,4 +125,15 @@ public class GasStationImpl implements GasStation {
 		}
 	}
 
+	private class PumpHolder {
+		boolean isAvailable = false;
+		double remainingAmount = -1;
+		GasPump pump = null;
+
+		public PumpHolder(GasPump pump) {
+			this.pump = pump;
+			isAvailable = true;
+			remainingAmount = pump.getRemainingAmount();
+		}
+	}
 }
